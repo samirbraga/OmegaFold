@@ -26,6 +26,8 @@ import typing
 import torch
 from torch import nn
 
+import torch_xla
+import torch_xla.core.xla_model as xm
 from omegafold import (
     confidence,
     decode,
@@ -199,7 +201,7 @@ class OmegaFold(modules.OFModule):
                     final_result = result
             else:
                 final_result = result
-
+            torch_xla.sync()
         return final_result
 
     def deep_sequence_embed(

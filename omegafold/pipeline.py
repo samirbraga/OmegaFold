@@ -324,7 +324,8 @@ def get_args() -> typing.Tuple[
         """
     )
     parser.add_argument(
-        'input_file', type=lambda x: os.path.expanduser(str(x)),
+        'input_file', type=str,
+        nargs="*",
         help=
         """
         The input fasta file

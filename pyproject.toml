@@ -8,7 +8,7 @@ dependencies = [
     "torch",
     "biotite>=1.2.0",
     "numpy<2",
-    "torch-xla[tpu]>=2.9.0",
+    "torch-xla[tpu]",
     "biopython"
 ]
 

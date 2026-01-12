@@ -16,3 +16,6 @@ dependencies = [
 name = "pytorch-cu113"
 url = "https://download.pytorch.org/whl/cu113"
 explicit = true
+
+[project.scripts]
+omegafold = "omegafold.__main__:main"

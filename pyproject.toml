@@ -18,4 +18,4 @@ url = "https://download.pytorch.org/whl/cu113"
 explicit = true
 
 [project.scripts]
-omegafold = "omegafold.__main__:main"
+omegafold = "main:main"

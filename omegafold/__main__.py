@@ -82,7 +82,7 @@ def _pad_inputs(
     return padded
 
 
-def _main(rank, args, inputs):
+def _mp_fn(rank, args, inputs):
     state_dict, forward_config = pipeline.get_models(args)
     device = torch_xla.device()
     n_chunks = xr.world_size()
@@ -139,8 +139,7 @@ def _main(rank, args, inputs):
             gc.collect()
         xm.master_print("Done!")
 
-
-if __name__ == '__main__':
+def main():
     args = pipeline.get_args()
 
     # create the output directory
@@ -156,4 +155,7 @@ if __name__ == '__main__':
     inputs = list(inputs)
     print(f"Total inputs: {len(inputs)}")
 
-    torch_xla.launch(_main, args=(args, inputs))
+    torch_xla.launch(_mp_fn, args=(args, inputs))
+
+if __name__ == '__main__':
+    main()

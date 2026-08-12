@@ -25,10 +25,10 @@ import logging
 import os
 import sys
 import time
-import torch_xla
+# import torch_xla
 import torch
-import torch_xla.runtime as xr
-import torch_xla.core.xla_model as xm
+# import torch_xla.runtime as xr
+# import torch_xla.core.xla_model as xm
 
 import omegafold as of
 from . import pipeline
@@ -40,15 +40,15 @@ from . import pipeline
 
 
 def _main(rank, args, state_dict, forward_config, input_files):
-    device = torch_xla.device()
-    n_chunks = xr.world_size()
+    device = torch.device('cpu')
+    n_chunks = 4 # xr.world_size()
     chunk_size = (len(input_files) + n_chunks - 1) // n_chunks
     input_files = input_files[rank * chunk_size:(rank + 1) * chunk_size]
     with torch.no_grad():
-        xm.master_print(f"Constructing OmegaFold")
+        print(f"Constructing OmegaFold")
         model = of.OmegaFold(of.make_config(args.model))
         if state_dict is None:
-            xm.master_print("Inferencing without loading weight")
+            print("Inferencing without loading weight")
         else:
             if "model" in state_dict:
                 state_dict = state_dict.pop("model")
@@ -57,7 +57,7 @@ def _main(rank, args, state_dict, forward_config, input_files):
         model.to(device)
 
         for input_file in input_files:
-            xm.master_print(f"Reading {input_file}")
+            print(f"Reading {input_file}")
             for i, (input_data, save_path) in enumerate(
                 pipeline.fasta2inputs(
                     input_file,
@@ -68,8 +68,9 @@ def _main(rank, args, state_dict, forward_config, input_files):
                     num_cycle=args.num_cycle,
                 )
             ):
-                xm.master_print(f"Predicting {i + 1}th chain in {input_file}")
-                xm.master_print(
+                print(input_data)
+                print(f"Predicting {i + 1}th chain in {input_file}")
+                print(
                     f"{len(input_data[0]['p_msa'][0])} residues in this chain."
                 )
                 ts = time.time()
@@ -80,12 +81,12 @@ def _main(rank, args, state_dict, forward_config, input_files):
                         fwd_cfg=forward_config
                     )                
                 except RuntimeError as e:
-                    xm.master_print(f"Failed to generate {save_path} due to {e}")
-                    xm.master_print(f"Skipping...")
+                    print(f"Failed to generate {save_path} due to {e}")
+                    print(f"Skipping...")
                     continue
-                xm.master_print(f"Finished prediction in {time.time() - ts:.2f} seconds.")
+                print(f"Finished prediction in {time.time() - ts:.2f} seconds.")
 
-                xm.master_print(f"Saving prediction to {save_path}")
+                print(f"Saving prediction to {save_path}")
                 pipeline.save_pdb(
                     pos14=output["final_atom_positions"],
                     b_factors=output["confidence"] * 100,
@@ -94,7 +95,7 @@ def _main(rank, args, state_dict, forward_config, input_files):
                     save_path=save_path,
                     model=0
                 )
-                xm.master_print(f"Saved")
+                print(f"Saved")
                 del output
                 gc.collect()
-        xm.master_print("Done!")
+        print("Done!")

@@ -91,13 +91,12 @@ def path_leaf(path: str) -> str:
 
 
 def fasta2inputs(
-        fasta_path: str,
-        output_dir: typing.Optional[str] = None,
-        num_pseudo_msa: int = 15,
-        device: typing.Optional[torch.device] = torch.device('cpu'),
-        mask_rate: float = 0.12,
-        num_cycle: int = 10,
-        deterministic: bool = True
+    fasta_path: str,
+    output_dir: typing.Optional[str] = None,
+    num_pseudo_msa: int = 15,
+    mask_rate: float = 0.12,
+    num_cycle: int = 10,
+    deterministic: bool = True
 ) -> typing.Generator[
     typing.Tuple[torch.Tensor, torch.Tensor, torch.Tensor, str], None, None]:
     """
@@ -107,7 +106,6 @@ def fasta2inputs(
         fasta_path: the path to the fasta files
         output_dir: the path to the output directory
         num_pseudo_msa:
-        device: the device to move
         mask_rate:
         num_cycle:
         deterministic:
@@ -177,7 +175,7 @@ def fasta2inputs(
             p_msa[~p_msa_mask.bool()] = 21
             data.append({"p_msa": p_msa, "p_msa_mask": p_msa_mask})
 
-        yield utils.recursive_to(data, device=device), out_fname
+        yield data, out_fname
 
 
 def save_pdb(
@@ -257,7 +255,7 @@ def _load_weights(
     weights_file = os.path.expanduser(weights_file)
     use_cache = os.path.exists(weights_file)
     if weights_file and weights_url and not use_cache:
-        logging.info(
+        print(
             f"Downloading weights from {weights_url} to {weights_file}"
         )
         os.makedirs(os.path.dirname(weights_file), exist_ok=True)
@@ -324,8 +322,7 @@ def get_args() -> typing.Tuple[
         """
     )
     parser.add_argument(
-        'input_file', type=str,
-        nargs="*",
+        'input_file', type=lambda x: os.path.expanduser(str(x)),
         help=
         """
         The input fasta file
@@ -411,9 +408,16 @@ def get_args() -> typing.Tuple[
             f"Model {args.model} is not available, "
             f"we only support model 1 and 2"
         )
+    return args
+
+def get_models(args):
+    if args.model == 1:
+        weights_url = "https://helixon.s3.amazonaws.com/release1.pt"
+    elif args.model == 2:
+        weights_url = "https://helixon.s3.amazonaws.com/release2.pt"
+
     weights_file = args.weights_file
-    # if the output directory is not provided, we will create one alongside the
-    # input fasta file
+
     if weights_file or weights_url:
         weights = _load_weights(weights_url, weights_file)
         weights = weights.pop('model', weights)
@@ -425,9 +429,7 @@ def get_args() -> typing.Tuple[
         num_recycle=args.num_cycle,
     )
 
-    args.device = _get_device(args.device)
-
-    return args, weights, forward_config
+    return weights, forward_config
 
 
 # =============================================================================

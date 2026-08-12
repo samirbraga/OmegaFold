@@ -1,5 +1,5 @@
 [project]
-name = "folding-evaluation"
+name = "omegafold"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -8,7 +8,7 @@ dependencies = [
     "torch",
     "biotite>=1.2.0",
     "numpy<2",
-    "torch-xla[tpu]>=2.9.0",
+    "torch-xla[tpu]",
     "biopython"
 ]
 
@@ -16,3 +16,6 @@ dependencies = [
 name = "pytorch-cu113"
 url = "https://download.pytorch.org/whl/cu113"
 explicit = true
+
+[project.scripts]
+omegafold = "omegafold.__main__:main"
